@@ -76,6 +76,11 @@ function initCard(card, data) {
   image.dataset.src = data.image;
   image.alt = data.content.title;
 
-  // ...
+  const title = card.querySelector('h1');
+  title.textContent = data.content.title;
+
+  const description = card.querySelector('p');
+  description.textContent = data.content.description;
+
 
 }
