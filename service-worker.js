@@ -1,6 +1,10 @@
 console.log('Service worker registration');
 
-const cacheVersion = 'v6';
+const excludeFromCache = [
+  'https://www.google.com/images/phd/px.gif'
+];
+
+const cacheVersion = 'v3';
 
 self.addEventListener('install', function(event) {
   event.waitUntil(
@@ -19,8 +23,15 @@ self.addEventListener('install', function(event) {
   );
 });
 
+self.addEventListener('activate', function(event) {
+  event.waitUntil(clients.claim());
+});
+
 self.addEventListener('fetch', function(event) {
-  if (event.request.method === 'GET') {
+  const url = new URL(event.request.url);
+  const link = `${url.origin}${url.pathname}`;
+
+  if (event.request.method === 'GET' && !excludeFromCache.includes(link)) {
     event.respondWith(
       caches.match(event.request)
         .then(function(response) {
@@ -41,7 +52,6 @@ self.addEventListener('fetch', function(event) {
     )
   }
 });
-
 
 self.addEventListener('message', function (event) {
   if (event.data.type === 'SKIP_WAITING') {

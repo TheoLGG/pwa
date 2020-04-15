@@ -1,8 +1,28 @@
-'user strict';
+'use strict';
 import page from '/node_modules/page/page.mjs';
+import checkConnectivity from './network.js';
 
 (async () => {
+  document.offline = false;
   const app = document.querySelector('#app main');
+  window.addEventListener('beforeinstallprompt', e => {
+    console.log('Application is ready to install');
+    e.preventDefault();
+    window.installPrompt = e;
+  });
+
+  document.addEventListener('conectivity-changed', e => {
+    const root = document.documentElement;
+    document.offline = !e.detail;
+    if (e.detail) {
+      console.log('Back online');
+      root.style.setProperty('--app-blue', '#007eef');
+    } else {
+      console.log('Offline mode');
+      root.style.setProperty('--app-blue', '#7D7D7D');
+    }
+  });
+  checkConnectivity({});
 
   const result = await fetch('/data/spacex.json');
   const data = await result.json();
@@ -54,8 +74,28 @@ import page from '/node_modules/page/page.mjs';
     const docTitle = document.head.querySelector('title');
     document.title = `${docTitle.dataset.base} - ${article.content.title}`;
 
+    
     document.body.scrollTop = 0;
     document.documentElement.scrollTop = 0;
+    
+    const btn = readCtn.querySelector('.install');
+    btn.addEventListener('click', () => {
+      window.installPrompt.prompt();
+      window.installPrompt.userChoice
+        .then(choice => {
+          if ( choice.outcome === 'accepted' ) {
+            console.log('Installation accepted');
+          } else {
+            console.log('Installation refused');
+          }
+        });
+      window.installPrompt = null;
+    });
+    setTimeout(() => {
+      if (window.installPrompt) {
+        btn.classList.remove('hidden');
+      }
+    }, 3000);
   });
 
   page();
