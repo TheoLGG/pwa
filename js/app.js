@@ -1,5 +1,6 @@
 'use strict';
 import page from '/node_modules/page/page.mjs';
+import { openDB } from '/node_modules/idb/build/esm/index.js';
 import checkConnectivity from './network.js';
 
 (async () => {
@@ -23,9 +24,21 @@ import checkConnectivity from './network.js';
     }
   });
   checkConnectivity({});
+  
+  const database = await openDB('news-feed', 1, {
+    upgrade(db) {
+      db.createObjectStore('articles');
+    }
+  });
 
-  const result = await fetch('/data/spacex.json');
-  const data = await result.json();
+  if (navigator.onLine) {
+    const result = await fetch('/data/spacex.json');
+    const json = await result.json();
+    await database.put('articles', json, 'articles');
+  }
+
+  const data = await database.get('articles', 'articles') || [];
+
 
   const skeleton = app.querySelector('.skeleton');
   skeleton.setAttribute('hidden', '');
